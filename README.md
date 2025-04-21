@@ -154,7 +154,7 @@ pip install -r requirements.txt
 -- Создать БД
 CREATE DATABASE server_logs;
 -- Подключиться к ней
-\c testdb
+\c server_logs
 -- Создать таблицу (пример)
 CREATE TABLE IF NOT EXISTS log_hashes (
     hash VARCHAR(64) PRIMARY KEY,
