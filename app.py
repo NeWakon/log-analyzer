@@ -46,7 +46,6 @@ CONFIG = {
     'connection_pool_size': 5
 }
 
-# Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -634,15 +633,11 @@ class MainWindow(QMainWindow):
 
     def export_ip_table_to_excel(self):
         try:
-            # Создаем имя файла с текущей датой
             now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             filename = os.path.join(os.getcwd(), f"ip_stats_{now}.xlsx")
-            
-            # Получаем данные из БД
             conn = psycopg2.connect(**CONFIG['database'])
             cursor = conn.cursor()
             
-            # Получаем список всех дней
             cursor.execute("""
                 SELECT DISTINCT DATE(datetime) as day 
                 FROM requests 
@@ -650,7 +645,6 @@ class MainWindow(QMainWindow):
             """)
             days = [row[0] for row in cursor.fetchall()]
             
-            # Получаем топ IP по количеству запросов
             cursor.execute("""
                 SELECT 
                     ip.ip_address,
@@ -663,28 +657,22 @@ class MainWindow(QMainWindow):
                 LIMIT 1000
             """)
             data = cursor.fetchall()
-            
-            # Создаем Excel файл
             wb = openpyxl.Workbook()
             ws = wb.active
             ws.title = "IP Statistics"
             
-            # Заголовки
             headers = ["IP Address"] + [str(day) for day in days]
             for col_num, header in enumerate(headers, 1):
                 col_letter = get_column_letter(col_num)
                 ws[f"{col_letter}1"] = header
                 ws[f"{col_letter}1"].font = Font(bold=True)
                 ws[f"{col_letter}1"].alignment = Alignment(horizontal='center')
-            
-            # Собираем данные в словарь для удобства
             ip_data = {}
             for ip, day, count in data:
                 if ip not in ip_data:
                     ip_data[ip] = {}
                 ip_data[ip][day] = count
-            
-            # Заполняем таблицу
+        
             for row_num, ip in enumerate(ip_data.keys(), 2):
                 ws[f"A{row_num}"] = ip
                 for col_num, day in enumerate(days, 2):
@@ -692,7 +680,6 @@ class MainWindow(QMainWindow):
                     count = ip_data[ip].get(day, 0)
                     ws[f"{col_letter}{row_num}"] = count
             
-            # Автонастройка ширины столбцов
             for col in ws.columns:
                 max_length = 0
                 column = col[0].column_letter
@@ -705,10 +692,8 @@ class MainWindow(QMainWindow):
                 adjusted_width = (max_length + 2) * 1.2
                 ws.column_dimensions[column].width = adjusted_width
             
-            # Сохраняем файл
             wb.save(filename)
             
-            # Показываем сообщение об успехе
             QMessageBox.information(
                 self, 
                 "Экспорт завершен", 
